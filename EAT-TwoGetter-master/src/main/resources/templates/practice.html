@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<button onclick="showBoard()">게시판 정보 콘솔에 띄우기</button>
+<script th:inline="javascript">
+  /*<![CDATA[*/
+  let boardInfo = /*[[${board}]]*/;
+  /*]]>*/
+</script>
+
+<script>
+  function showBoard() {
+    console.log(boardInfo);
+  }
+</script>
+</body>
+</html>
