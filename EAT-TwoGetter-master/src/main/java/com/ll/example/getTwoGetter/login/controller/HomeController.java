@@ -5,6 +5,7 @@ import com.ll.example.getTwoGetter.Board.dto.BoardDto;
 import com.ll.example.getTwoGetter.Board.service.BoardService;
 import com.ll.example.getTwoGetter.login.Service.UserService;
 import com.ll.example.getTwoGetter.login.model.User;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -14,14 +15,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 import javax.servlet.http.HttpSession;
 import java.util.List;
+import javax.servlet.http.HttpSession;
+import java.util.List;
 
 @Controller
+@RequiredArgsConstructor
 public class HomeController {
-    @Autowired
-    UserService userService;
-
-    @Autowired
-    private BoardService boardService;
+    private final UserService userService;
+    private final BoardService boardService;
 
     @GetMapping("/")
     public String home(@AuthenticationPrincipal UserDetails userDetails, Model model, HttpSession session){
@@ -30,21 +31,14 @@ public class HomeController {
             User user = userService.findByUsename(username);
             model.addAttribute("user",user);
         }
+        List<Board> boards = boardService.findAll();
+        model.addAttribute("board", boards);
         if(session.getAttribute("message")!=null){
             String message = (String) session.getAttribute("message");
             model.addAttribute("message", message);
         }
-
-        // 마커띄우려고
-        List<BoardDto> boardDtoList = boardService.getBoardList();
-        model.addAttribute("boards",boardDtoList);
         return "index";
-
     }
 
 
-//    @GetMapping("/assets/demo/chart-area-demo.js")
-//    public String redirectHome(){
-//        return "redirect:/";
-//    }
 }

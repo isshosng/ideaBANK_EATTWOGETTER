@@ -1,204 +1,298 @@
 <!doctype html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>HOME</title>
-    <link href="https://cdn.jsdelivr.net/npm/simple-datatables@latest/dist/style.css" rel="stylesheet" />
-    <link href="/css/modal.css" rel="stylesheet">
-    <link href="css/styles.css" rel="stylesheet" />
-    <link href="css/map.css" rel="stylesheet"/>
-    <script src="https://use.fontawesome.com/releases/v6.1.0/js/all.js" crossorigin="anonymous"></script>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="fragment/common :: head('HOME')">
+
 </head>
-<body class="sb-nav-fixed">
-<nav th:replace = "fragment/common :: menu('home')"></nav>
+<body class="sb-nav-fixed" id="navFix">
+<th:block th:replace = "fragment/common :: menu('home')"></th:block>
 <div id="layoutSidenav">
     <div th:replace = "fragment/common :: side('side')"></div>
     <div id="layoutSidenav_content">
-        <main>
-            <div class="container-fluid px-4">
-                <div class="map_wrap">
-                    <div id="map" style="width:100%;height:500px;"></div>
-                    <ul id="category">
-                        <li id="BK9" data-order="0">
-                            <span class="category_bg bank"></span>
-                            은행
-                        </li>
-                        <li id="MT1" data-order="1">
-                            <span class="category_bg mart"></span>
-                            마트
-                        </li>
-                        <li id="PM9" data-order="2">
-                            <span class="category_bg pharmacy"></span>
-                            약국
-                        </li>
-                        <li id="OL7" data-order="3">
-                            <span class="category_bg oil"></span>
-                            주유소
-                        </li>
-                        <li id="CE7" data-order="4">
-                            <span class="category_bg cafe"></span>
-                            카페
-                        </li>
-                        <li id="CS2" data-order="5">
-                            <span class="category_bg store"></span>
-                            편의점
-                        </li>
-                    </ul>
 
-                    <img id="pin" src="/images/pin.png" alt="pin" />
-                </div>
+        <div class="map_wrap">
+            <div id="map" style="width:100%;height:100%;"></div>
+            <ul id="category">
+                <li id="BK9" data-order="0">
+                    <span class="category_bg bank"></span>
+                    한식
+                </li>
+                <li id="MT1" data-order="1">
+                    <span class="category_bg mart"></span>
+                    양식
+                </li>
+                <li id="PM9" data-order="2">
+                    <span class="category_bg pharmacy"></span>
+                    일식
+                </li>
+                <li id="OL7" data-order="3">
+                    <span class="category_bg oil"></span>
+                    중식
+                </li>
+                <li id="CE7" data-order="4">
+                    <span class="category_bg cafe"></span>
+                    치킨
+                </li>
+                <li id="CS2" data-order="5">
+                    <span class="category_bg store"></span>
+                    피자
+                </li>
+            </ul>
+            <button class="gpsButton" id="gpsButtonConnect" onclick="gpsButton()" ><img style="width:40px; height:40px;" src="./images/gpsButton.svg" alt="gps"></button>
+            <img id="pin" th:src="@{/images/pin.png}" alt="pin" />
+            <div id="address_view">
+                <p style="font-size: 25px; font-weight: bold">&nbsp;현재 위치</p>
+                <span id="centerAddr" style="font-size: 20px"></span>
+                <span id="centerLatLng" style="font-size: 20px"></span>
 
-                <div class="card address_view">
-                    <div style="dispaly: none" th:each="board : ${boards}">
-                        <div scope="row">
-                            <span class="board-lat" th:text="${board.lat}"></span>
-                            <span class="board-lon" th:text="${board.lat}"></span>
-                        </div>
-                    </div>
+                <button sec:authorize="isAuthenticated()" type="button" class="btn btn-success build_marker" id="build_marker">EAT TWO</button>
+                <a sec:authorize="!isAuthenticated()" type="button" class="btn btn-success" th:href="@{/account/login}">EAT TWO</a>
 
+            </div>
+        </div>
 
-
-                    <div class="card-header">
-                        위치정보
-                    </div>
-                    <div class="card-body">
-                        <h5 class="card-title">현재 위치</h5>
-                        <p class="card-text">
-                            <span id="centerAddr" style="font-size: 20px"></span>
-                            <!--현재위치창에 위도, 경도 표시한다.-->
-                            <span id="centerLatLng" style="front-size: 20px"></span>
-                        </p>
-                        <button sec:authorize="isAuthenticated()" type="button" class="btn btn-success btn-lg build_marker" id="build_marker">EAT TWO</button>
-                        <a sec:authorize="!isAuthenticated()" type="button" id="build_marker2" class="btn btn-success btn-lg build_marker" th:href="@{/account/login}">EAT TWO</a>
-                    </div>
-                </div>
-
-                <!--모임생성 게시판 모달 구현-->
-                <div sec:authorize="isAuthenticated()">
-                    <div class="boardModal">
-                        <div class="boardModal_content">
-                            <h4 class="boardModal_header border-bottom mb-3">현재 위치에 EAT TWO를 띄웁니다!</h4>
-                            <div class="boardModal_body ">
-                                <form action="/post" method="post">
-                                    <div class="form-group row">
-                                        <label for="username" class="col-sm-2 col-form-label mb-3"><strong>닉네임</strong></label>
-                                        <div class="col-sm-10">
-                                            <input type="text" name="username" class="form-control" id="username" value="username" th:value="${user.nickname}" readonly></input>
-                                        </div>
-                                    </div>
-                                    <div class="form-group row">
-                                        <label for="locate" class="col-sm-2 col-form-label mb-3"><strong>위치</strong></label>
-                                        <div class="col-sm-10">
-                                            <input type="text" class="form-control" id="locate" readonly></input>
-                                        </div>
-                                    </div>
-                                    <div class="form-group row">
-                                        <label for="lat" class="col-sm-2 col-form-label mb-3"><strong>위도</strong></label>
-                                        <div class="col-sm-10">
-                                            <input type="text" name="lat" class="form-control" id="lat" readonly/>
-                                        </div>
-                                    </div>
-                                    <div class="form-group row">
-                                        <label for="lng" class="col-sm-2 col-form-label mb-3"><strong>경도</strong></label>
-                                        <div class="col-sm-10">
-                                            <input type="text" name="lng" class="form-control" id="lng" readonly/>
-                                        </div>
-                                    </div>
-                                    <div class="form-group row">
-                                        <label for="inputTitle" class="col-sm-2 col-form-label mb-3"><strong>제목</strong></label>
-                                        <div class="col-sm-10">
-                                            <input type="text" name="title" class="form-control" id="inputTitle" required />
-                                        </div>
-                                    </div>
-                                    <!--                                    <div class="form-group row">-->
-                                    <!--                                        <label for="inputStoreType" class="col-sm-2 col-form-label mb-3"><strong>가게유형</strong></label>-->
-                                    <!--                                        <div class="col-sm-10">-->
-                                    <!--                                            <input type="text" name="storeType" class="form-control" id="inputStoreType" required />-->
-                                    <!--                                        </div>-->
-                                    <!--                                    </div>-->
-
-                                    <div class="form-group row">
-                                        <label for="inputStoreType" class="col-sm-2 col-form-label mb-3"><strong>가게유형</strong></label>
-                                        <div class="col-sm-10">
-                                            <select class="form-select" required="required" name="storeType" id="inputStoreType" onchange="selectBoxChange(this.value);" aria-label="Default select example">
-                                                <option value="" selected disabled hidden>가게유형을 선택해주세요.</option>
-                                                <option value="한식">한식</option>
-                                                <option value="중식">중식</option>
-                                                <option value="일식">일식</option>
-                                                <option value="양식">양식</option>
-                                                <option value="카페">카페</option>
-                                                <option value="야식">야식</option>
-                                                <option value="기타">기타</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-
-                                    <div class="form-group row">
-                                        <label for="inputStoreName" class="col-sm-2 col-form-label mb-3"><strong>상호명</strong></label>
-                                        <div class="col-sm-10">
-                                            <input type="text" name="storeName" class="form-control" id="inputStoreName" required />
-                                        </div>
-                                    </div>
-                                    <div class="form-group row">
-                                        <label for="inputOrderDetail" class="col-sm-2 col-form-label mb-3"><strong>주문내용</strong></label>
-                                        <div class="col-sm-10">
-                                            <input type="text" name="orderDetail" class="form-control" id="inputOrderDetail" required />
-                                        </div>
-                                    </div>
-                                    <div class="form-group row">
-                                        <label for="inputMinimumOrderAmount" class="col-sm-2 col-form-label mb-3"><strong>최소주문금액</strong></label>
-                                        <div class="col-sm-10">
-                                            <input type="text" name="minimumOrderAmount" class="form-control" id="inputMinimumOrderAmount" required />
-                                        </div>
-                                    </div>
-                                    <div class="form-group row">
-                                        <label for="inputDeliveryCharge" class="col-sm-2 col-form-label mb-3"><strong>배달요금</strong></label>
-                                        <div class="col-sm-10">
-                                            <input type="text" name="deliveryCharge" class="form-control" id="inputDeliveryCharge" required />
-                                        </div>
-                                    </div>
-                                    <div class="form-group row">
-                                        <label for="inputContent" class="col-sm-2 col-form-label mb-3"><strong>기타사항</strong></label>
-                                        <div class="col-sm-10">
-                                            <textarea type="text" name="content" class="form-control" id="inputContent"></textarea>
-                                        </div>
-                                    </div>
-                                    <div class="col-auto mt-5">
-                                        <button type="submit" class="btn btn-primary" role="button">글쓰기</button>
-                                        <button type="button" class="btn btn-secondary boardModal_close">닫기</button>
-                                    </div>
-                                    <button type="button" class="btn-close btn-close-black boardModal_close2" aria-label="Close"></button>
-                                </form>
+        <!--모임생성 게시판 모달 구현-->
+        <div sec:authorize="isAuthenticated()">
+            <div class="boardModal">
+                <div class="boardModal_content">
+                    <h4 class="boardModal_header border-bottom mb-3">현재 위치에 EAT TWO를 띄웁니다!</h4>
+                    <div class="boardModal_body ">
+                        <form action="/post" method="post">
+                            <div class="form-group row">
+                                <label for="username" class="col-sm-2 col-form-label mb-3"><strong>닉네임</strong></label>
+                                <div class="col-sm-10">
+                                    <input type="text" name="username" class="form-control" id="username" value="username" th:value="${user.nickname}" readonly></input>
+                                </div>
                             </div>
+                            <div class="form-group row">
+                                <label for="locate" class="col-sm-2 col-form-label mb-3"><strong>위치</strong></label>
+                                <div class="col-sm-10">
+                                    <input type="text" class="form-control" id="locate" readonly></input>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="lat" class="col-sm-2 col-form-label mb-3"><strong>위도</strong></label>
+                                <div class="col-sm-10">
+                                    <input type="text" name="lat" class="form-control" id="lat" readonly/>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="lng" class="col-sm-2 col-form-label mb-3"><strong>경도</strong></label>
+                                <div class="col-sm-10">
+                                    <input type="text" name="lng" class="form-control" id="lng" readonly/>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="inputTitle" class="col-sm-2 col-form-label mb-3"><strong>제목</strong></label>
+                                <div class="col-sm-10">
+                                    <input type="text" name="title" class="form-control" id="inputTitle" required />
+                                </div>
+                            </div>
+
+                            <div class="form-group row">
+                                <label for="inputStoreType" class="col-sm-2 col-form-label mb-3"><strong>가게유형</strong></label>
+                                <div class="col-sm-10">
+                                    <select class="form-select" required="required" name="storeType" id="inputStoreType" onchange="selectBoxChange(this.value);" aria-label="Default select example">
+                                        <option value="" selected disabled hidden>가게유형을 선택해주세요.</option>
+                                        <option value="한식">한식</option>
+                                        <option value="중식">중식</option>
+                                        <option value="일식">일식</option>
+                                        <option value="양식">양식</option>
+                                        <option value="카페">카페</option>
+                                        <option value="야식">야식</option>
+                                        <option value="기타">기타</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group row">
+                                <label for="inputStoreName" class="col-sm-2 col-form-label mb-3"><strong>상호명</strong></label>
+                                <div class="col-sm-10">
+                                    <input type="text" name="storeName" class="form-control" id="inputStoreName" required />
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="inputOrderDetail" class="col-sm-2 col-form-label mb-3"><strong>주문내용</strong></label>
+                                <div class="col-sm-10">
+                                    <input type="text" name="orderDetail" class="form-control" id="inputOrderDetail" required />
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="inputMinimumOrderAmount" class="col-sm-2 col-form-label mb-3"><strong>최소주문금액</strong></label>
+                                <div class="col-sm-10">
+                                    <input type="text" name="minimumOrderAmount" class="form-control" id="inputMinimumOrderAmount" required />
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="inputDeliveryCharge" class="col-sm-2 col-form-label mb-3"><strong>배달요금</strong></label>
+                                <div class="col-sm-10">
+                                    <input type="text" name="deliveryCharge" class="form-control" id="inputDeliveryCharge" required />
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                                <label for="inputContent" class="col-sm-2 col-form-label mb-3"><strong>기타사항</strong></label>
+                                <div class="col-sm-10">
+                                    <textarea type="text" name="content" class="form-control" id="inputContent"></textarea>
+                                </div>
+                            </div>
+                            <div class="col-auto mt-5">
+                                <button type="submit" class="btn btn-primary btn-write" role="button">글쓰기</button>
+                                <button type="button" class="btn btn-secondary boardModal_close">닫기</button>
+                            </div>
+                            <button type="button" class="btn-close btn-close-black boardModal_close2" aria-label="Close"></button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!--게시판 정보 모달 띄우기 start!-->
+        <div sec:authorize="isAuthenticated()">
+            <div class="boardDetailModal">
+                <div class="boardDetailModal_content">
+                    <button onclick="middlespace()">중간 지점 찾기</button>
+                    <h4 class="boardDetailModal_header">게시글 정보입니다.</h4>
+                    <div class="boardDetailModal_body ">
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th scope="col">#</th>
+                                <th scope="col">정보</th>
+                            </tr>
+                            </thead>
+
+                            <tbody>
+                            <tr>
+                                <th scope="row">닉네임</th>
+                                <td id="showBoardNickname"></td>
+                            </tr>
+                            <tr>
+                                <th scope="row">생성 시간</th>
+                                <td id="makeBoardTime"></td>
+                            </tr>
+                            <tr>
+                                <th scope="row">위치</th>
+                                <td id="showBoardLocate"></td>
+                            </tr>
+                            <tr>
+                                <th scope="row">제목</th>
+                                <td id="showBoardTitle"></td>
+                            </tr>
+                            <tr>
+                                <th scope="row">가게유형</th>
+                                <td id="showBoardType"></td>
+                            </tr>
+                            <tr>
+                                <th scope="row">상호명</th>
+                                <td id="showBoardName"></td>
+                            </tr>
+                            <tr>
+                                <th scope="row">주문내용</th>
+                                <td id="showBoardOrder"></td>
+                            </tr>
+                            <tr>
+                                <th scope="row">최소주문금액</th>
+                                <td id="showBoardMin"></td>
+                            </tr>
+                            <tr>
+                                <th scope="row">배달요금</th>
+                                <td id="showBoardDel"></td>
+                            </tr>
+                            <tr>
+                                <th scope="row">기타사항</th>
+                                <td id="showBoardContent"></td>
+                            </tr>
+                            </tbody>
+                        </table>
+
+                        <input type="hidden" id="showBoardLat" />
+                        <input type="hidden" id="showBoardLng" />
+
+                        <div class="col-auto mt-5">
+                            <button type="button" class="btn btn-primary chat-btn" onclick="showChat()">채팅하기</button>
+                            <button type="button" class="btn btn-secondary boardDetailModal_close">닫기</button>
                         </div>
+                        <button type="button" class="btn-close btn-close-black boardDetailModal_close2" aria-label="Close"></button>
                     </div>
                 </div>
             </div>
-        </main>
-        <!--모임생성 게시판 모달 구현 끝-->
-        <footer class="py-4 bg-light mt-auto">
-            <div class="container-fluid px-4">
-                <div class="d-flex align-items-center justify-content-between small">
-                    <div class="text-muted">Copyright &copy; Your Website 2022</div>
-                    <div>
-                        <a href="#">Privacy Policy</a>
-                        &middot;
-                        <a href="#">Terms &amp; Conditions</a>
-                    </div>
+        </div>
+        <!--게시판 정보 모달 띄우기 end!-->
+        <div class="chatRoomModal">
+            <div class="chatRoomModal_body">
+                <div>채팅방 제목</div>
+                <input id="chatRoomTitle" type="text" placeholder="채팅방 제목을 입력해주세요."/>
+                <div>
+                    <button onclick="postChat()">확인</button>
+                    <button class="chatRoomModal_close" onclick="closeChat()">닫기</button>
                 </div>
             </div>
-        </footer>
+        </div>
+
+        <footer th:replace = "fragment/common :: footer('footer')"></footer>
     </div>
 </div>
 
 
 <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=374dc9ec4e95ae00f4f8e366bf25c14e&libraries=services"></script>
+
 <script>
+    const showProfileModal  = document.querySelector(".modal")
+    function removeStorage(){
+        localStorage.removeItem("Lat")
+        localStorage.removeItem("Lng")
+    }
+    function showProfile(){
+        showProfileModal.style.display='block';
+    }
+    function closeProfile(){
+        showProfileModal.style.display='none';
+    }
+    const chatModal = document.querySelector('.chatRoomModal')
+    function showChat(){
+        var showBoardNickname = document.getElementById('showBoardNickname')
+        if(user1.nickname==showBoardNickname.innerText){
+            alert("채팅은 다른 사용자와 가능합니다")
+        }else{
+            chatModal.style.display='block';
+        }
+    }
+    function closeChat(){
+        chatModal.style.display='none';
+    }
+    function postChat(){
+        var chatRoomTitle=  document.getElementById('chatRoomTitle')
+        var showBoardNickname = document.getElementById('showBoardNickname')
+
+        fetch("/chatApi/chatPost",{
+            method: 'POST',
+            headers:{
+                'content-type':'application/json'
+            },
+            body : JSON.stringify({
+                chatTitle: chatRoomTitle.value,
+                username: user1.nickname,
+                partner: showBoardNickname.innerText
+            }),
+        }).then((response)=>{
+            if(response.status==200){
+                location.href="chat/list";
+            }
+        })
+
+    }
+</script>
+<script>
+    function middlespace(){
+        var partnerLat= document.getElementById('showBoardLat').innerText
+        var partnerLng =document.getElementById('showBoardLng').innerText
+        location.href=`/middlePlaceMap/middleMap?lat=${partnerLat}&lng=${partnerLng}`;
+    }
+</script>
+<script>
+
+
+
     // 마커를 클릭했을 때 해당 장소의 상세정보를 보여줄 커스텀오버레이입니다
     var placeOverlay = new kakao.maps.CustomOverlay({zIndex:1}),
         contentNode = document.createElement('div'), // 커스텀 오버레이의 컨텐츠 엘리먼트 입니다
@@ -208,11 +302,27 @@
     var mapContainer = document.getElementById('map'), // 지도를 표시할 div
         mapOption = {
             center: new kakao.maps.LatLng(37.566826, 126.9786567), // 지도의 중심좌표
-            level: 2 // 지도의 확대 레벨
+            level: 4 // 지도의 확대 레벨
         };
+    if(localStorage.getItem("Lat")!=null){
+        var latCenter = localStorage.getItem("Lat")
+        var lngCenter = localStorage.getItem("Lng")
+        mapOption.center = new kakao.maps.LatLng(latCenter, lngCenter)
+    }
 
     // 지도를 생성합니다
     var map = new kakao.maps.Map(mapContainer, mapOption);
+
+    // 마커가 표시될 위치입니다
+    var markerPosition  = new kakao.maps.LatLng(37.637327115801384, 126.83915168286534);
+
+    // 마커를 생성합니다
+    var marker = new kakao.maps.Marker({
+        position: markerPosition
+    });
+
+    // 마커가 지도 위에 표시되도록 설정합니다
+    marker.setMap(map);
 
     // 현 위치 반환을 위한 객체를 생성합니다.
     var geocoder = new kakao.maps.services.Geocoder();
@@ -311,7 +421,6 @@
                 position: position, // 마커의 위치
                 image: markerImage
             });
-
         marker.setMap(map); // 지도 위에 마커를 표출합니다
         markers.push(marker);  // 배열에 생성된 마커를 추가합니다
 
@@ -408,65 +517,31 @@
 
     // 3. 위치 수집, GPS 마커 표시 기능(GeoLocation)
 
-    // HTML5의 geolocation으로 사용할 수 있는지 확인합니다
-    if (navigator.geolocation) {
-        // GeoLocation을 이용해서 접속 위치를 얻어옵니다
-        navigator.geolocation.getCurrentPosition(function(position) {
+    function gpsButton(){
+        // HTML5의 geolocation으로 사용할 수 있는지 확인합니다
+        if (navigator.geolocation) {
+            // GeoLocation을 이용해서 접속 위치를 얻어옵니다
+            navigator.geolocation.getCurrentPosition(function(position) {
 
-            var lat = position.coords.latitude, // 위도
-                lon = position.coords.longitude; // 경도
-            var locPosition = new kakao.maps.LatLng(lat, lon); // 마커가 표시될 위치를 geolocation으로 얻어온 좌표로 생성합니다
+                var lat = position.coords.latitude, // 위도
+                    lon = position.coords.longitude; // 경도
+                var locPosition = new kakao.maps.LatLng(lat, lon); // 마커가 표시될 위치를 geolocation으로 얻어온 좌표로 생성합니다
 
-            // 마커와 인포윈도우를 표시합니다
+                // 마커와 인포윈도우를 표시합니다
+                displayMarker(locPosition);
+            });
+        } else { // HTML5의 GeoLocation을 사용할 수 없을때 마커 표시 위치와 인포윈도우 내용을 설정합니다
+            var locPosition = new kakao.maps.LatLng(x, y);
             displayMarker(locPosition);
-
-            // lat, lon 리스트
-            const lat_list = document.getElementsByClassName('board-lat');
-            const lon_list = document.getElementsByClassName('board-lon');
-
-            // 각 게시글 positiono 마커 등록
-            for (let i = 0; i < lat_list.length; i++) {
-                var lats = lat_list.item(i);
-                var lons = lon_list.item(i);
-                var positions = new kakao.maps.LatLng(lats.innerHTML, lons.innerHTML);
-
-                displayList(positions);
-            }
-
-        });
-    } else { // HTML5의 GeoLocation을 사용할 수 없을때 마커 표시 위치와 인포윈도우 내용을 설정합니다
-        var locPosition = new kakao.maps.LatLng(x, y);
-        displayMarker(locPosition);
-
-        // lat, lon 리스트
-        const lat_list = document.getElementsByClassName('board-lat');
-        const lon_list = document.getElementsByClassName('board-lon');
-
-        // 각 게시글 position 마커 등록
-        for (let i = 0; i < lat_list.length; i++) {
-            var lats = lat_list.item(i);
-            var lons = lon_list.item(i);
-            var positions = new kakao.maps.LatLng(lats.innerHTML, lons.innerHTML);
-
-            displayList(positions);
         }
     }
 
-    // board 리스트 지도 표시
-    function displayList(positions){
-        var marker = new kakao.maps.Marker({
-            map: map,
-            position: positions
-        });
-        marker.setImage(icon);
-    }
 
     // displayMarker 함수(지도에 마커를 표시하는 함수)
-
     //마커 이미지를 변경
     let icon = new kakao.maps.MarkerImage(
         "images/gpsIcon.png",
-        new kakao.maps.Size(20, 20)
+        new kakao.maps.Size(50, 50)
     );
 
     // 마커 표시 함수
@@ -506,15 +581,18 @@
     function displayCenterInfo(result, status) {
         if (status === kakao.maps.services.Status.OK) {
             var infoDiv = document.getElementById('centerAddr');
-
             var infoLng = document.getElementById('centerLatLng');
 
             //지도 현재 좌표 위도 경도
-            // console.log(map.getCenter())
+
             for(var i = 0; i < result.length; i++) {
                 // 행정동의 region_type 값은 'H' 이므로
                 infoDiv.innerHTML = result[i].address.address_name;
                 infoLng.innerHTML = map.getCenter();
+                var centerMapx = map.getCenter().Ma
+                var centerMapy = map.getCenter().La
+                localStorage.setItem("Lat", centerMapx)
+                localStorage.setItem("Lng", centerMapy)
                 break;
 
             }
@@ -525,18 +603,13 @@
 <!--map 구현 끝!-->
 
 <script>
-    const modal = document.querySelector('.modal');
-    const btnOpenPopup = document.querySelector('.btn-open-popup');
-    const btnClosePopup = document.querySelector('.modal_close');
-
-    btnOpenPopup.addEventListener('click', () => {
-        modal.style.display = 'block';
-    });
-    btnClosePopup.addEventListener('click', () => {
-        modal.style.display = 'none';
-    });
-
+    var message = null;
+    if(message!==null){
+        alert(message);
+    }
+    // location.replace(null);
 </script>
+<script src="https://code.jquery.com/jquery-3.5.1.js"></script>
 
 //게시판 모달 구현
 <script>
@@ -562,9 +635,8 @@
     });
 
     btnClosePopup3.addEventListener('click', () => {
-    boardModal.style.display = 'none';
+        boardModal.style.display = 'none';
     });
-
 </script>
 
 <script>
@@ -593,8 +665,133 @@
     }
 </script>
 
+// db에 있는 위도, 경도 값 불러와서 지도에 마커 띄우기
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    let boardInfo = /*[[${board}]]*/;
+    let user1 = /*[[${user}]]*/;
+    /*]]>*/
+</script>
 
+<script>
+    var arrLat = [];
+    var arrLng = [];
+    var positions = [];
+    var arridBoard= [];
 
+    var imageSrc2 = "https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png";
+    // 마커 이미지의 이미지 크기 입니다
+    var imageSize2 = new kakao.maps.Size(35, 50);
+
+    // 마커 이미지를 생성합니다
+    var markerImage2 = new kakao.maps.MarkerImage(imageSrc2, imageSize2);
+
+    const boardDetailModal = document.querySelector('.boardDetailModal');
+    const boardDetailModal_close = document.querySelector('.boardDetailModal_close');
+    const boardDetailModal_close2 = document.querySelector('.boardDetailModal_close2');
+
+    showBoardMarker();
+
+    function showBoardMarker() {
+
+        for (var i = 0; i < boardInfo.length; i++) {
+            arrLat[i] = boardInfo[i].lat;
+            arrLng[i] = boardInfo[i].lng;
+            arridBoard[i] = boardInfo[i].id;
+        }
+
+        for (var i = 0; i < boardInfo.length; i++) {
+            positions[i] = new kakao.maps.LatLng(arrLat[i], arrLng[i]);
+        }
+
+        for (var i = 0; i < positions.length; i++) {
+            addMarker(positions[i], arridBoard[i]);
+        }
+    }
+
+    function addMarker(positions2, idBoard2) {
+        // 마커를 생성합니다
+        var marker2 = new kakao.maps.Marker({
+            map: map, // 마커를 표시할 지도
+            position: positions2, // 마커를 표시할 위치
+            image : markerImage2, // 마커 이미지
+            title: idBoard2
+        });
+
+        kakao.maps.event.addListener(marker2, 'click', function() {
+            var showBoardNickname= document.getElementById('showBoardNickname')
+            var showBoardLocate = document.getElementById('showBoardLocate')
+            var showBoardTitle = document.getElementById('showBoardTitle')
+            var showBoardType = document.getElementById('showBoardType')
+            var showBoardName = document.getElementById('showBoardName')
+            var showBoardOrder = document.getElementById('showBoardOrder')
+            var showBoardMin = document.getElementById('showBoardMin')
+            var showBoardDel = document.getElementById('showBoardDel')
+            var showBoardContent = document.getElementById('showBoardContent')
+            var makeBoardTime = document.getElementById('makeBoardTime')
+            var showBoardLat = document.getElementById('showBoardLat')
+            var showBoardLng = document.getElementById('showBoardLng')
+
+            if(user1==null){
+                alert("로그인 이후 가능합니다")
+                location.href="/account/login"
+            }
+            fetch(`/getMarkerBoard/${marker2.getTitle()}`)
+                .then(data=>data.json())
+                .then(responseData=>{
+                        console.log(responseData)
+                        let geocoder = new kakao.maps.services.Geocoder();
+
+                        let callback = function(result, status) {
+                            if (status === kakao.maps.services.Status.OK) {
+                                showBoardLocate.innerText =result[0].address.address_name
+                            }
+                        };
+                        let coord = new kakao.maps.LatLng(responseData.lat, responseData.lng);
+                        var boardlocate = geocoder.coord2Address(coord.getLng(), coord.getLat(), callback)
+                        var createDate = responseData.createdDate
+                        var createDate_ = createDate.substring(0, 4)+"년 "+createDate.substring(5, 7)+"월" +createDate.substring(8, 10)+"일 ";
+                        var createDate__ = " "+createDate.substring(11,13)+"시"+createDate.substring(14,16)+"분"
+                        makeBoardTime.innerText = createDate_
+                        makeBoardTime.innerText+=createDate__
+                        showBoardNickname.innerText = responseData.username
+                        showBoardTitle.innerText = responseData.title
+                        showBoardType.innerText = responseData.storeType
+                        showBoardName.innerText = responseData.storeName
+                        showBoardOrder.innerText = responseData.orderDetail
+                        showBoardMin.innerText = responseData.minimumOrderAmount
+                        showBoardDel.innerText = responseData.deliveryCharge
+                        showBoardContent.innerText = responseData.content
+                        showBoardLat.innerText = responseData.lat
+                        showBoardLng.innerText = responseData.lng
+                    }
+                )
+
+            boardDetailModal.style.display = 'block';
+        });
+    }
+
+    boardDetailModal_close.addEventListener('click', () => {
+        boardDetailModal.style.display = 'none';
+    });
+
+    boardDetailModal_close2.addEventListener('click', () => {
+        boardDetailModal.style.display = 'none';
+    });
+
+</script>
+
+//게시판 정보 모달 구현
+
+<script>
+    function showNav(){
+        if(document.getElementById('navFix').classList.contains('sb-sidenav-toggled')){
+            document.getElementById('navFix').classList.remove('sb-sidenav-toggled')
+        }else{
+            document.getElementById('navFix').classList.add('sb-sidenav-toggled')
+        }
+    }
+</script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
 <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js" crossorigin="anonymous"></script>-->
